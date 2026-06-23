@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>漢字かきとりゲーム</title>
+<style>
+
+
+:root {
+  --green: #2d9b6a;
+  --green-light: #e8f7f0;
+  --green-mid: #a8dfc5;
+  --orange: #e8732a;
+  --orange-light: #fff3eb;
+  --yellow: #f5c842;
+  --red: #e84444;
+  --red-light: #fef0f0;
+  --bg: #f0f7f3;
+  --card: #ffffff;
+  --text: #1a2e1a;
+  --muted: #7a8f7a;
+  --border: #d6e8d6;
+  --shadow: 0 4px 24px rgba(45,155,106,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Maru Gothic Pro', 'BIZ UDGothic', 'Meiryo', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; padding: 14px 12px 48px;
+}
+header {
+  width: 100%; max-width: 460px; display: flex;
+  align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.logo { font-size: 1.2rem; font-weight: 900; color: var(--green); }
+.logo span { color: var(--orange); }
+.hdr-right { display: flex; align-items: center; gap: 8px; }
+.master-pill {
+  background: var(--card); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 4px 12px; font-size: 0.78rem;
+  font-weight: 700; color: var(--muted); display: flex; align-items: center; gap: 4px;
+}
+.master-pill .num { color: var(--green); font-size: 1rem; }
+.stats-btn {
+  border: 1.5px solid var(--border); border-radius: 12px; padding: 6px 13px;
+  background: var(--card); font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Maru Gothic Pro', 'BIZ UDGothic', 'Meiryo', sans-serif;
+  font-size: 0.78rem; font-weight: 700; color: var(--muted); cursor: pointer;
+}
+.progress-wrap { width: 100%; max-width: 460px; margin-bottom: 18px; }
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-size: 0.74rem; color: var(--muted); font-weight: 600; margin-bottom: 5px;
+}
+.progress-track { width: 100%; height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), #52c98c); border-radius: 99px; transition: width 0.5s ease; }
+
+.card {
+  width: 100%; max-width: 460px; background: var(--card);
+  border-radius: 24px; box-shadow: var(--shadow);
+  border: 1.5px solid var(--border); padding: 24px 22px 22px; margin-bottom: 14px;
+}
+.drill-badge {
+  display: inline-block; background: var(--green-light); color: var(--green);
+  border-radius: 8px; padding: 2px 10px; font-size: 0.72rem;
+  font-weight: 700; margin-bottom: 16px; letter-spacing: 0.04em;
+}
+.reading-label { font-size: 0.74rem; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; margin-bottom: 6px; }
+.reading-display {
+  font-size: 2.2rem; font-weight: 900; color: var(--green);
+  letter-spacing: 0.12em; margin-bottom: 10px; line-height: 1.3;
+}
+.context-text {
+  font-size: 0.92rem; color: var(--muted); margin-bottom: 20px;
+  line-height: 1.7; background: var(--bg); border-radius: 10px; padding: 8px 12px;
+}
+.context-text .blank {
+  display: inline-block; border-bottom: 2.5px solid var(--green);
+  background: var(--green-light); border-radius: 4px;
+  padding: 0 4px; color: transparent; user-select: none;
+}
+.write-area-label { font-size: 0.74rem; color: var(--muted); font-weight: 700; letter-spacing: 0.06em; margin-bottom: 8px; }
+.write-box {
+  width: 100%; min-height: 90px; border: 2.5px dashed var(--green-mid);
+  border-radius: 16px; background: #f8fcfa; display: flex;
+  align-items: center; justify-content: center; margin-bottom: 16px;
+}
+.write-placeholder { font-size: 0.88rem; color: var(--green-mid); font-weight: 600; text-align: center; }
+
+.answer-reveal {
+  display: none; background: var(--green-light); border: 2px solid var(--green);
+  border-radius: 14px; padding: 14px 18px; margin-bottom: 16px; text-align: center;
+}
+.answer-reveal.show { display: block; }
+.answer-kanji { font-size: 2rem; font-weight: 900; color: var(--text); letter-spacing: 0.08em; display: block; margin-bottom: 4px; }
+.answer-hint-text { font-size: 0.78rem; color: var(--muted); font-weight: 600; }
+
+.streak-row { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
+.star { font-size: 1.25rem; filter: grayscale(1) opacity(0.25); transition: filter 0.3s, transform 0.3s; }
+.star.lit { filter: none; transform: scale(1.15); }
+.master-word-badge {
+  display: none; background: var(--yellow); color: #7a5a00;
+  border-radius: 10px; padding: 3px 12px; font-size: 0.78rem;
+  font-weight: 900; margin-top: 6px; letter-spacing: 0.05em; text-align: center;
+}
+.master-word-badge.show { display: block; }
+
+.btn-row { width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 10px; }
+.btn {
+  width: 100%; border: none; border-radius: 16px; padding: 16px;
+  font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Maru Gothic Pro', 'BIZ UDGothic', 'Meiryo', sans-serif; font-size: 1.05rem; font-weight: 700;
+  cursor: pointer; transition: transform 0.12s; letter-spacing: 0.02em;
+}
+.btn:active { transform: scale(0.97); }
+.btn-show { background: linear-gradient(135deg, #2d9b6a, #1e7a52); color: #fff; box-shadow: 0 4px 14px rgba(45,155,106,0.28); }
+.btn-ok { background: linear-gradient(135deg, #2d9b6a, #1e7a52); color: #fff; box-shadow: 0 4px 14px rgba(45,155,106,0.28); display: none; }
+.btn-wrong { background: var(--red-light); color: var(--red); border: 2px solid #f5b8b8; display: none; }
+.btn-next { background: var(--card); border: 2px solid var(--border); color: var(--muted); display: none; }
+
+.phase-write .btn-show { display: block; }
+.phase-write .btn-ok,.phase-write .btn-wrong,.phase-write .btn-next { display: none; }
+.phase-judge .btn-show,.phase-judge .btn-next { display: none; }
+.phase-judge .btn-ok,.phase-judge .btn-wrong { display: block; }
+.phase-next .btn-show,.phase-next .btn-ok,.phase-next .btn-wrong { display: none; }
+.phase-next .btn-next { display: block; }
+
+#stats-screen { display: none; width: 100%; max-width: 460px; flex-direction: column; align-items: center; gap: 14px; }
+#stats-screen.show { display: flex; }
+#game-area { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.stats-card { width: 100%; background: var(--card); border-radius: 24px; border: 1.5px solid var(--border); padding: 26px 22px; box-shadow: var(--shadow); }
+.stats-title { font-size: 1.15rem; font-weight: 900; color: var(--green); margin-bottom: 16px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.stats-item { background: var(--green-light); border-radius: 14px; padding: 13px; text-align: center; }
+.stats-item .snum { font-size: 1.7rem; font-weight: 900; color: var(--green); display: block; }
+.stats-item .slabel { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+.word-list-title { font-size: 0.74rem; font-weight: 700; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 8px; }
+.word-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 10px; margin-bottom: 5px; font-size: 0.86rem; font-weight: 500; }
+.word-item.mastered { background: var(--green-light); color: var(--green); }
+.word-item.learning { background: var(--orange-light); color: var(--orange); }
+.word-item.struggling { background: var(--red-light); color: var(--red); }
+.wi-badge { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.word-item.mastered .wi-badge { background: var(--green); color: #fff; }
+.word-item.learning .wi-badge { background: var(--orange); color: #fff; }
+.word-item.struggling .wi-badge { background: var(--red); color: #fff; }
+.btn-back {
+  width: 100%; border: none; border-radius: 16px; padding: 15px;
+  font-family: 'Hiragino Maru Gothic ProN', 'Hiragino Maru Gothic Pro', 'BIZ UDGothic', 'Meiryo', sans-serif; font-size: 1rem; font-weight: 700;
+  cursor: pointer; background: linear-gradient(135deg, #2d9b6a, #1e7a52);
+  color: #fff; box-shadow: 0 4px 14px rgba(45,155,106,0.28);
+}
+.celebration {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 100; opacity: 0;
+}
+.celebration.pop { animation: celebpop 1.8s ease forwards; }
+@keyframes celebpop {
+  0%   { opacity:0; transform:scale(0.6); }
+  18%  { opacity:1; transform:scale(1.06); }
+  80%  { opacity:1; transform:scale(1); }
+  100% { opacity:0; }
+}
+.celeb-inner {
+  background: var(--yellow); border-radius: 24px; padding: 22px 34px;
+  font-size: 1.35rem; font-weight: 900; color: #7a5a00; text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">漢字<span>かきとり</span></div>
+  <div class="hdr-right">
+    <div class="master-pill">🏆<span class="num" id="master-count">0</span></div>
+    <button class="stats-btn" onclick="showStats()">きろく</button>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>マスター達成率</span>
+    <span id="prog-frac"></span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+  </div>
+</div>
+
+<div id="game-area">
+  <div class="card">
+    <div class="drill-badge" id="drill-badge">ドリル1</div>
+    <div class="reading-label">よみかた</div>
+    <div class="reading-display" id="reading-display"></div>
+    <div class="context-text" id="context-text"></div>
+    <div class="write-area-label">✏️ ノートに書いてみよう</div>
+    <div class="write-box">
+      <div class="write-placeholder">ここは空欄です<br>紙やノートに書いてね</div>
+    </div>
+    <div class="answer-reveal" id="answer-reveal">
+      <span class="answer-kanji" id="answer-kanji"></span>
+      <span class="answer-hint-text">こたえをかくにんしよう ✓</span>
+    </div>
+    <div class="streak-row">
+      <span class="star" id="s1">⭐</span>
+      <span class="star" id="s2">⭐</span>
+      <span class="star" id="s3">⭐</span>
+    </div>
+    <div class="master-word-badge" id="master-word-badge">🏆 マスター！</div>
+  </div>
+
+  <div class="btn-row phase-write" id="btn-row">
+    <button class="btn btn-show" onclick="showAnswer()">📖 答えを見る</button>
+    <button class="btn btn-ok" onclick="markCorrect()">⭕ できた！</button>
+    <button class="btn btn-wrong" onclick="markWrong()">❌ まちがえた</button>
+    <button class="btn btn-next" onclick="nextQuestion()">→ 次の問題へ</button>
+  </div>
+</div>
+
+<div id="stats-screen">
+  <div class="stats-card">
+    <div class="stats-title">📊 学習きろく</div>
+    <div class="stats-grid">
+      <div class="stats-item"><span class="snum" id="s-total">0</span><span class="slabel">といた数</span></div>
+      <div class="stats-item"><span class="snum" id="s-correct">0</span><span class="slabel">せいかい数</span></div>
+      <div class="stats-item"><span class="snum" id="s-master">0</span><span class="slabel">マスター</span></div>
+      <div class="stats-item"><span class="snum" id="s-rate">0%</span><span class="slabel">せいかいりつ</span></div>
+    </div>
+    <div id="word-list"></div>
+  </div>
+  <button class="btn-back" onclick="hideStats()">← もどる</button>
+</div>
+
+<div class="celebration" id="celebration">
+  <div class="celeb-inner" id="celeb-msg">🎉 マスター！</div>
+</div>
+
+<script>
+const allWords = [
+  // ドリル1
+  {id:'d1_01',drill:'ドリル1',target:'じょうほう',kanji:'情報',context:'__をかける'},
+  {id:'d1_02',drill:'ドリル1',target:'ものがたり',kanji:'物語',context:'__のないよう'},
+  {id:'d1_03',drill:'ドリル1',target:'へんしゅう',kanji:'編集',context:'本を__する'},
+  {id:'d1_04',drill:'ドリル1',target:'あむ',kanji:'編む',context:'手ぶくろを__'},
+  {id:'d1_05',drill:'ドリル1',target:'かんしん',kanji:'関心',context:'音楽に__をもつ'},
+  {id:'d1_06',drill:'ドリル1',target:'せいかく',kanji:'正確',context:'__にたしかめる'},
+  {id:'d1_07',drill:'ドリル1',target:'こうせい',kanji:'構成',context:'番組の__'},
+  {id:'d1_08',drill:'ドリル1',target:'かまえる',kanji:'構える',context:'家を__'},
+  {id:'d1_09',drill:'ドリル1',target:'かこむ',kanji:'囲む',context:'庭をへいで__'},
+  {id:'d1_10',drill:'ドリル1',target:'しゅうい',kanji:'周囲',context:'湖の__を歩く'},
+  {id:'d1_11',drill:'ドリル1',target:'かいせつ',kanji:'解説',context:'野球の__'},
+  {id:'d1_12',drill:'ドリル1',target:'とく',kanji:'解く',context:'問題を__'},
+  {id:'d1_13',drill:'ドリル1',target:'さいがい',kanji:'災害',context:'__をふせぐ'},
+  {id:'d1_14',drill:'ドリル1',target:'こうど',kanji:'高度',context:'__な技術'},
+  {id:'d1_15',drill:'ドリル1',target:'しりょう',kanji:'資料',context:'会議の__'},
+  {id:'d1_16',drill:'ドリル1',target:'かいちょう',kanji:'快調',context:'車が__に進む'},
+  {id:'d1_17',drill:'ドリル1',target:'こころよい',kanji:'快い',context:'__返事をする'},
+  {id:'d1_18',drill:'ドリル1',target:'ちしき',kanji:'知識',context:'__を身につける'},
+  // ドリル2
+  {id:'d2_01',drill:'ドリル2',target:'たいけん',kanji:'体験',context:'はじめての__'},
+  {id:'d2_02',drill:'ドリル2',target:'じょうやとう',kanji:'常夜灯',context:'__の光'},
+  {id:'d2_03',drill:'ドリル2',target:'つねに',kanji:'常に',context:'__注意する'},
+  {id:'d2_04',drill:'ドリル2',target:'えいえん',kanji:'永遠',context:'__のなぞ'},
+  {id:'d2_05',drill:'ドリル2',target:'なわとび',kanji:'縄とび',context:'__をする'},
+  {id:'d2_06',drill:'ドリル2',target:'なれる',kanji:'慣れる',context:'新しい学校に__'},
+  {id:'d2_07',drill:'ドリル2',target:'しゅうかん',kanji:'習慣',context:'早起きの__'},
+  {id:'d2_08',drill:'ドリル2',target:'あらわれる',kanji:'現れる',context:'ねこが__'},
+  {id:'d2_09',drill:'ドリル2',target:'くびわ',kanji:'首輪',context:'犬の__'},
+  {id:'d2_10',drill:'ドリル2',target:'たんちょう',kanji:'単調',context:'__なリズム'},
+  {id:'d2_11',drill:'ドリル2',target:'こむ',kanji:'混む',context:'道路が__'},
+  {id:'d2_12',drill:'ドリル2',target:'こんごう',kanji:'混合',context:'薬品を__する'},
+  {id:'d2_13',drill:'ドリル2',target:'まぜる',kanji:'混ぜる',context:'絵の具を__'},
+  {id:'d2_14',drill:'ドリル2',target:'じょうたい',kanji:'状態',context:'あぶない__が続く'},
+  {id:'d2_15',drill:'ドリル2',target:'かいさつ',kanji:'改札',context:'駅の__を出る'},
+  {id:'d2_16',drill:'ドリル2',target:'まよわず',kanji:'迷わず',context:'__選ぶ'},
+  {id:'d2_17',drill:'ドリル2',target:'ひこうきぐも',kanji:'飛行機雲',context:'白い__'},
+  {id:'d2_18',drill:'ドリル2',target:'ひょうげん',kanji:'表現',context:'気持ちを__する'},
+  {id:'d2_19',drill:'ドリル2',target:'りきし',kanji:'力士',context:'__がすもうをとる'},
+  {id:'d2_20',drill:'ドリル2',target:'かんしゃ',kanji:'感謝',context:'__を伝える'},
+  // 読み練習
+  {id:'r_01',drill:'読み練習',target:'じっさい',kanji:'実際',context:'__のようす'},
+  {id:'r_02',drill:'読み練習',target:'ぎゃくてん',kanji:'逆転',context:'順位が__する'},
+  {id:'r_03',drill:'読み練習',target:'さかだち',kanji:'逆立ち',context:'__をする'},
+  {id:'r_04',drill:'読み練習',target:'さからう',kanji:'逆らう',context:'流れに__'},
+  {id:'r_05',drill:'読み練習',target:'かいしょう',kanji:'快勝',context:'試合に__する'},
+  {id:'r_06',drill:'読み練習',target:'いんしょう',kanji:'印象',context:'__に残った話'},
+  {id:'r_07',drill:'読み練習',target:'みずあび',kanji:'水浴び',context:'象が__をする'},
+  {id:'r_08',drill:'読み練習',target:'かち',kanji:'価値',context:'__ある体験'},
+  {id:'r_09',drill:'読み練習',target:'ひじょう',kanji:'非常',context:'__に強いてき'},
+  {id:'r_10',drill:'読み練習',target:'そうぞう',kanji:'想像',context:'__上の生き物'},
+  {id:'r_11',drill:'読み練習',target:'おった',kanji:'織った',context:'手で__ぬの'},
+  {id:'r_12',drill:'読み練習',target:'そしき',kanji:'組織',context:'__の一員'},
+  {id:'r_13',drill:'読み練習',target:'しょうめい',kanji:'証明',context:'身分を__する'},
+  {id:'r_14',drill:'読み練習',target:'しょぞく',kanji:'所属',context:'__先をたしかめる'},
+  {id:'r_15',drill:'読み練習',target:'くらべる',kanji:'比べる',context:'大きさを__'},
+  {id:'r_16',drill:'読み練習',target:'たいひ',kanji:'対比',context:'二つの案を__する'},
+  {id:'r_17',drill:'読み練習',target:'ぎじゅつ',kanji:'技術',context:'職人の__'},
+  {id:'r_18',drill:'読み練習',target:'はんのう',kanji:'反応',context:'とっさに__する'},
+  {id:'r_19',drill:'読み練習',target:'こたえる',kanji:'応える',context:'要求に__'},
+  {id:'r_20',drill:'読み練習',target:'しつもん',kanji:'質問',context:'__に答える'},
+];
+
+const STORAGE_KEY = 'kanjigame_kakitori_v1';
+
+// localStorage を安全に使う（使えない環境ではメモリのみ）
+let _storage = null;
+function getStorage() {
+  if (_storage !== null) return _storage;
+  try { localStorage.setItem('_test', '1'); localStorage.removeItem('_test'); _storage = localStorage; }
+  catch(e) { _storage = { _data:{}, getItem(k){ return this._data[k]||null; }, setItem(k,v){ this._data[k]=v; }, removeItem(k){ delete this._data[k]; } }; }
+  return _storage;
+}
+
+function loadState() {
+  try { const s = getStorage().getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+function saveState() {
+  try { getStorage().setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+function initState() {
+  const progress = {};
+  allWords.forEach(w => { progress[w.id] = {streak:0,wrong:0,mastered:false,totalCorrect:0}; });
+  return {progress, totalCorrect:0, totalAttempts:0};
+}
+let state = loadState() || initState();
+allWords.forEach(w => { if (!state.progress[w.id]) state.progress[w.id] = {streak:0,wrong:0,mastered:false,totalCorrect:0}; });
+
+let currentWord = null;
+
+function pickWord() {
+  const notMastered = allWords.filter(w => !state.progress[w.id].mastered);
+  const pool = notMastered.length > 0 ? notMastered : allWords;
+  const weights = pool.map(w => { const p = state.progress[w.id]; return Math.max(0.2, 1 + p.wrong * 3 - p.streak * 0.5); });
+  const total = weights.reduce((a,b) => a+b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0) return pool[i]; }
+  return pool[pool.length - 1];
+}
+
+function renderQuestion() {
+  currentWord = pickWord();
+  const p = state.progress[currentWord.id];
+  document.getElementById('reading-display').textContent = currentWord.target;
+  document.getElementById('drill-badge').textContent = currentWord.drill;
+  document.getElementById('answer-kanji').textContent = currentWord.kanji;
+
+  // Context with blank sized to kanji length
+  const blankSpaces = '\u3000'.repeat(currentWord.kanji.length);
+  const ctx = currentWord.context.replace('__', '<span class="blank">' + blankSpaces + '</span>');
+  document.getElementById('context-text').innerHTML = ctx;
+
+  document.getElementById('answer-reveal').classList.remove('show');
+  setPhase('write');
+  renderStreak(p.streak, p.mastered);
+  renderProgress();
+  updateMasterCount();
+}
+
+function setPhase(phase) { document.getElementById('btn-row').className = 'btn-row phase-' + phase; }
+
+function renderStreak(streak, mastered) {
+  for (let i = 1; i <= 3; i++) document.getElementById('s'+i).classList.toggle('lit', i <= streak);
+  document.getElementById('master-word-badge').classList.toggle('show', mastered);
+}
+
+function renderProgress() {
+  const mastered = allWords.filter(w => state.progress[w.id].mastered).length;
+  const pct = Math.round(mastered / allWords.length * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('prog-frac').textContent = mastered + ' / ' + allWords.length;
+}
+
+function updateMasterCount() {
+  document.getElementById('master-count').textContent = allWords.filter(w => state.progress[w.id].mastered).length;
+}
+
+function showAnswer() {
+  document.getElementById('answer-reveal').classList.add('show');
+  setPhase('judge');
+}
+
+function markCorrect() {
+  const p = state.progress[currentWord.id];
+  p.streak = Math.min(p.streak + 1, 3);
+  p.totalCorrect++;
+  state.totalCorrect++;
+  state.totalAttempts++;
+  if (p.streak >= 3 && !p.mastered) {
+    p.mastered = true;
+    celebrate('🏆「' + currentWord.kanji + '」マスター！');
+  }
+  saveState();
+  setPhase('next');
+  renderStreak(p.streak, p.mastered);
+  renderProgress();
+  updateMasterCount();
+}
+
+function markWrong() {
+  const p = state.progress[currentWord.id];
+  p.streak = 0; p.wrong++;
+  state.totalAttempts++;
+  saveState();
+  setPhase('next');
+  renderStreak(p.streak, p.mastered);
+}
+
+function nextQuestion() { renderQuestion(); }
+
+function celebrate(msg) {
+  const el = document.getElementById('celebration');
+  document.getElementById('celeb-msg').textContent = msg;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+}
+
+function showStats() {
+  document.getElementById('game-area').style.display = 'none';
+  document.getElementById('stats-screen').classList.add('show');
+  const mastered = allWords.filter(w => state.progress[w.id].mastered).length;
+  const rate = state.totalAttempts > 0 ? Math.round(state.totalCorrect / state.totalAttempts * 100) : 0;
+  document.getElementById('s-total').textContent = state.totalAttempts;
+  document.getElementById('s-correct').textContent = state.totalCorrect;
+  document.getElementById('s-master').textContent = mastered;
+  document.getElementById('s-rate').textContent = rate + '%';
+
+  const container = document.getElementById('word-list');
+  container.innerHTML = '<div class="word-list-title">ことばのじょうたい</div>';
+  const attempted = allWords.filter(w => { const p = state.progress[w.id]; return p.totalCorrect > 0 || p.wrong > 0; })
+    .sort((a,b) => { const pa = state.progress[a.id], pb = state.progress[b.id]; if (pa.mastered !== pb.mastered) return pa.mastered ? -1 : 1; return pb.wrong - pa.wrong; });
+
+  if (attempted.length === 0) {
+    container.innerHTML += '<div style="color:var(--muted);font-size:0.85rem;padding:12px 0">まだもんだいをといていないよ</div>';
+    return;
+  }
+  attempted.forEach(w => {
+    const p = state.progress[w.id];
+    const cls = p.mastered ? 'mastered' : p.wrong >= 3 ? 'struggling' : 'learning';
+    const badge = p.mastered ? 'マスター' : p.wrong >= 3 ? 'にがて⚠' : '⭐' + p.streak + '/3';
+    const div = document.createElement('div');
+    div.className = 'word-item ' + cls;
+    div.innerHTML = '<span>' + w.kanji + '（' + w.target + '）</span><span class="wi-badge">' + badge + '</span>';
+    container.appendChild(div);
+  });
+}
+
+function hideStats() {
+  document.getElementById('game-area').style.display = '';
+  document.getElementById('stats-screen').classList.remove('show');
+  renderQuestion();
+}
+
+// DOM読み込み完了後に確実に実行
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderQuestion);
+} else {
+  renderQuestion();
+}
+</script>
+</body>
+</html>
